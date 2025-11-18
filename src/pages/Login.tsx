@@ -1,35 +1,56 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { PiggyBank } from "lucide-react";
-import { useState } from "react";
+import { PiggyBank, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
+  const [emailOrUsername, setEmailOrUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    usernameOrEmail: "",
-    password: "",
-  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement actual authentication
-    if (formData.usernameOrEmail && formData.password) {
-      toast({
-        title: "Welcome back!",
-        description: "Logging you in...",
-      });
+  useEffect(() => {
+    if (user) {
       navigate("/dashboard");
-    } else {
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!emailOrUsername || !password) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
         variant: "destructive",
       });
+      return;
+    }
+
+    setIsLoading(true);
+
+    const { error } = await signIn(emailOrUsername, password);
+
+    if (error) {
+      toast({
+        title: "Error signing in",
+        description: error.message || "Invalid credentials",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    } else {
+      toast({
+        title: "Success!",
+        description: "Welcome back to PiggySaving",
+      });
+      navigate("/dashboard");
     }
   };
 
@@ -55,10 +76,9 @@ const Login = () => {
                 id="usernameOrEmail"
                 type="text"
                 placeholder="Enter your username or email"
-                value={formData.usernameOrEmail}
-                onChange={(e) =>
-                  setFormData({ ...formData, usernameOrEmail: e.target.value })
-                }
+                value={emailOrUsername}
+                onChange={(e) => setEmailOrUsername(e.target.value)}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -68,15 +88,21 @@ const Login = () => {
                 id="password"
                 type="password"
                 placeholder="Enter your password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
                 required
               />
             </div>
-            <Button type="submit" className="w-full" size="lg">
-              Sign In
+            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </form>
           
