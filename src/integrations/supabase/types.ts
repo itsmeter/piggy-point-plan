@@ -14,7 +14,449 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      achievements: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string | null
+          id: string
+          name: string
+          points_reward: number | null
+          requirement_type: string
+          requirement_value: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon?: string | null
+          id?: string
+          name: string
+          points_reward?: number | null
+          requirement_type: string
+          requirement_value?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          points_reward?: number | null
+          requirement_type?: string
+          requirement_value?: number | null
+        }
+        Relationships: []
+      }
+      budgets: {
+        Row: {
+          amount: number
+          created_at: string
+          end_date: string | null
+          id: string
+          name: string
+          spent: number | null
+          start_date: string
+          status: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name: string
+          spent?: number | null
+          start_date: string
+          status?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name?: string
+          spent?: number | null
+          start_date?: string
+          status?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budgets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      piggy_points: {
+        Row: {
+          created_at: string
+          current_level: number
+          id: string
+          last_login_date: string | null
+          login_streak: number
+          points_to_next_level: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_level?: number
+          id?: string
+          last_login_date?: string | null
+          login_streak?: number
+          points_to_next_level?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_level?: number
+          id?: string
+          last_login_date?: string | null
+          login_streak?: number
+          points_to_next_level?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "piggy_points_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          id: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          budget: number | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string
+          status: string | null
+          total_expense: number | null
+          total_income: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date: string
+          status?: string | null
+          total_expense?: number | null
+          total_income?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string
+          status?: string | null
+          total_expense?: number | null
+          total_income?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_items: {
+        Row: {
+          config: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          is_available: boolean | null
+          name: string
+          preview_url: string | null
+          price: number
+          type: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          name: string
+          preview_url?: string | null
+          price: number
+          type: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          name?: string
+          preview_url?: string | null
+          price?: number
+          type?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          details: string | null
+          id: string
+          project_id: string | null
+          transaction_date: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          project_id?: string | null
+          transaction_date?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          project_id?: string | null
+          transaction_date?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_transactions_project"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_purchases: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          purchased_at: string
+          shop_item_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          purchased_at?: string
+          shop_item_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          purchased_at?: string
+          shop_item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_purchases_shop_item_id_fkey"
+            columns: ["shop_item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_settings: {
+        Row: {
+          bill_due_date: number | null
+          created_at: string
+          electricity_bill: number | null
+          entertainment_budget: number | null
+          first_setup_completed: boolean | null
+          food_budget: number | null
+          has_bills: boolean | null
+          id: string
+          internet_bill: number | null
+          monthly_income: number | null
+          notifications_enabled: boolean | null
+          rent: number | null
+          rent_due_date: number | null
+          shopping_budget: number | null
+          theme: string | null
+          transportation_budget: number | null
+          updated_at: string
+          user_id: string
+          water_bill: number | null
+        }
+        Insert: {
+          bill_due_date?: number | null
+          created_at?: string
+          electricity_bill?: number | null
+          entertainment_budget?: number | null
+          first_setup_completed?: boolean | null
+          food_budget?: number | null
+          has_bills?: boolean | null
+          id?: string
+          internet_bill?: number | null
+          monthly_income?: number | null
+          notifications_enabled?: boolean | null
+          rent?: number | null
+          rent_due_date?: number | null
+          shopping_budget?: number | null
+          theme?: string | null
+          transportation_budget?: number | null
+          updated_at?: string
+          user_id: string
+          water_bill?: number | null
+        }
+        Update: {
+          bill_due_date?: number | null
+          created_at?: string
+          electricity_bill?: number | null
+          entertainment_budget?: number | null
+          first_setup_completed?: boolean | null
+          food_budget?: number | null
+          has_bills?: boolean | null
+          id?: string
+          internet_bill?: number | null
+          monthly_income?: number | null
+          notifications_enabled?: boolean | null
+          rent?: number | null
+          rent_due_date?: number | null
+          shopping_budget?: number | null
+          theme?: string | null
+          transportation_budget?: number | null
+          updated_at?: string
+          user_id?: string
+          water_bill?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
