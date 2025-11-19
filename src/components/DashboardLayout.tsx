@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { usePiggyPoints } from "@/hooks/usePiggyPoints";
+import { useTransactions } from "@/hooks/useTransactions";
 import {
   LayoutDashboard,
   Receipt,
@@ -17,6 +19,9 @@ import {
   X,
   Trophy,
   LogOut,
+  Eye,
+  EyeOff,
+  Wallet
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -27,7 +32,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [balanceHidden, setBalanceHidden] = useState(false);
   const { user, loading, signOut } = useAuth();
+  const { piggyPoints } = usePiggyPoints();
+  const { balance } = useTransactions();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -69,9 +77,23 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-piggy-gold/10 px-3 py-1 rounded-full">
-              <Trophy className="h-4 w-4 text-piggy-gold" />
-              <span className="text-sm font-semibold">1,250</span>
+            <div className="flex items-center gap-2 bg-muted px-2 py-1 rounded-lg">
+              <Wallet className="h-3 w-3 text-primary" />
+              <span className="text-xs font-semibold">
+                {balanceHidden ? '••••••' : `₱${balance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5"
+                onClick={() => setBalanceHidden(!balanceHidden)}
+              >
+                {balanceHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              </Button>
+            </div>
+            <div className="flex items-center gap-1 bg-piggy-gold/10 px-2 py-1 rounded-lg">
+              <Trophy className="h-3 w-3 text-piggy-gold" />
+              <span className="text-xs font-semibold">{piggyPoints?.total_points || 0}</span>
             </div>
             <Button
               variant="ghost"
@@ -129,14 +151,31 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <span className="font-bold text-xl">PiggySaving</span>
           </div>
 
-          {/* PiggyPoints Badge */}
-          <div className="mx-6 mb-6 p-4 bg-gradient-to-br from-piggy-gold/10 to-piggy-gold/5 border border-piggy-gold/20 rounded-xl">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">PiggyPoints</span>
-              <Trophy className="h-5 w-5 text-piggy-gold" />
+          {/* PiggyPoints and Balance Display */}
+          <div className="mx-6 mb-6 space-y-3">
+            <div className="p-4 bg-muted rounded-xl">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Balance</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => setBalanceHidden(!balanceHidden)}
+                >
+                  {balanceHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                </Button>
+              </div>
+              <div className="text-2xl font-bold">
+                {balanceHidden ? '••••••' : `₱${balance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}
+              </div>
             </div>
-            <div className="text-2xl font-bold">1,250</div>
-            <p className="text-xs text-muted-foreground mt-1">Level 5 • Gold Saver</p>
+            <div className="p-4 bg-gradient-to-br from-piggy-gold/10 to-piggy-gold/5 border border-piggy-gold/20 rounded-xl">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">PiggyPoints</span>
+                <Trophy className="h-5 w-5 text-piggy-gold" />
+              </div>
+              <div className="text-2xl font-bold">{piggyPoints?.total_points || 0}</div>
+            </div>
           </div>
 
           {/* Navigation */}

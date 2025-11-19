@@ -9,6 +9,19 @@ import { useBudgets } from "@/hooks/useBudgets";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
+import { UtensilsCrossed, Car, Home, Smartphone, ShoppingBag, Heart, GraduationCap, Briefcase } from "lucide-react";
+
+const CATEGORY_ICONS: Record<string, any> = {
+  'Food & Dining': UtensilsCrossed,
+  'Transportation': Car,
+  'Rent': Home,
+  'Utilities': Smartphone,
+  'Shopping': ShoppingBag,
+  'Entertainment': Heart,
+  'Education': GraduationCap,
+  'Other': Briefcase
+};
+
 const Budgets = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const { budgets, loading, createBudget, deleteBudget } = useBudgets();
@@ -56,15 +69,25 @@ const Budgets = () => {
                 <Card key={budget.id}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{budget.name}</CardTitle>
-                        <div className="flex gap-2 mt-2">
-                          <Badge variant={budget.type === 'monthly' ? 'default' : 'secondary'}>
-                            {budget.type}
-                          </Badge>
-                          <Badge variant={budget.status === 'active' ? 'default' : 'outline'}>
-                            {budget.status}
-                          </Badge>
+                      <div className="flex items-center gap-3">
+                        {CATEGORY_ICONS[budget.name] && (
+                          <div className="p-3 bg-primary/10 rounded-full">
+                            {(() => {
+                              const Icon = CATEGORY_ICONS[budget.name];
+                              return <Icon className="h-6 w-6 text-primary" />;
+                            })()}
+                          </div>
+                        )}
+                        <div>
+                          <CardTitle className="text-lg">{budget.name}</CardTitle>
+                          <div className="flex gap-2 mt-2">
+                            <Badge variant={budget.type === 'monthly' ? 'default' : 'secondary'}>
+                              {budget.type}
+                            </Badge>
+                            <Badge variant={budget.status === 'active' ? 'default' : 'outline'}>
+                              {budget.status}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                       <Button
