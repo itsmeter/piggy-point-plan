@@ -65,7 +65,7 @@ export function useTransactions(limit?: number) {
   };
 
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => {
-    if (!user) return;
+    if (!user) return false;
 
     try {
       const { error } = await supabase
@@ -77,6 +77,25 @@ export function useTransactions(limit?: number) {
         });
 
       if (error) throw error;
+
+      // Update budget spent if this is an expense transaction
+      if (transaction.type === 'expense' && transaction.category) {
+        const { data: budget } = await supabase
+          .from('budgets')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('name', transaction.category)
+          .single();
+
+        if (budget) {
+          await supabase
+            .from('budgets')
+            .update({
+              spent: (budget.spent || 0) + Number(transaction.amount)
+            })
+            .eq('id', budget.id);
+        }
+      }
 
       toast({
         title: 'Success',
@@ -100,6 +119,14 @@ export function useTransactions(limit?: number) {
     if (!user) return;
 
     try {
+      // Get transaction details before deleting
+      const { data: transaction } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+
       const { error } = await supabase
         .from('transactions')
         .delete()
@@ -107,6 +134,25 @@ export function useTransactions(limit?: number) {
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Update budget spent if this was an expense transaction
+      if (transaction && transaction.type === 'expense' && transaction.category) {
+        const { data: budget } = await supabase
+          .from('budgets')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('name', transaction.category)
+          .single();
+
+        if (budget) {
+          await supabase
+            .from('budgets')
+            .update({
+              spent: Math.max(0, (budget.spent || 0) - Number(transaction.amount))
+            })
+            .eq('id', budget.id);
+        }
+      }
 
       toast({
         title: 'Success',

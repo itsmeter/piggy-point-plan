@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useBudgets } from '@/hooks/useBudgets';
+import { formatNumberWithCommas, parseFormattedNumber } from '@/lib/utils';
 
 interface AddTransactionModalProps {
   open: boolean;
@@ -12,22 +14,10 @@ interface AddTransactionModalProps {
   onSubmit: (transaction: any) => Promise<boolean>;
 }
 
-const CATEGORIES = [
-  'Food & Dining',
-  'Transportation',
-  'Shopping',
-  'Entertainment',
-  'Utilities',
-  'Healthcare',
-  'Education',
-  'Rent',
-  'Salary',
-  'Freelance',
-  'Investment',
-  'Other'
-];
+const INCOME_CATEGORIES = ['Salary', 'Donation', 'Bonus'];
 
 export function AddTransactionModal({ open, onClose, onSubmit }: AddTransactionModalProps) {
+  const { budgets } = useBudgets();
   const [formData, setFormData] = useState({
     amount: '',
     type: 'expense' as 'income' | 'expense',
@@ -36,6 +26,13 @@ export function AddTransactionModal({ open, onClose, onSubmit }: AddTransactionM
     transaction_date: new Date().toISOString().split('T')[0]
   });
   const [loading, setLoading] = useState(false);
+
+  const expenseCategories = budgets.map(b => b.name);
+
+  useEffect(() => {
+    // Reset category when type changes
+    setFormData(prev => ({ ...prev, category: '' }));
+  }, [formData.type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +44,7 @@ export function AddTransactionModal({ open, onClose, onSubmit }: AddTransactionM
     setLoading(true);
     const success = await onSubmit({
       ...formData,
-      amount: parseFloat(formData.amount),
+      amount: parseFloat(parseFormattedNumber(formData.amount)),
       transaction_date: new Date(formData.transaction_date).toISOString()
     });
 
@@ -64,6 +61,8 @@ export function AddTransactionModal({ open, onClose, onSubmit }: AddTransactionM
       onClose();
     }
   };
+
+  const categories = formData.type === 'income' ? INCOME_CATEGORIES : expenseCategories;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -92,15 +91,23 @@ export function AddTransactionModal({ open, onClose, onSubmit }: AddTransactionM
             </div>
 
             <div>
-              <Label>Amount (₱)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                required
-              />
+              <Label>Amount</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                <Input
+                  type="text"
+                  placeholder="0"
+                  value={formData.amount}
+                  onChange={(e) => {
+                    const value = parseFormattedNumber(e.target.value);
+                    if (value === '' || !isNaN(Number(value))) {
+                      setFormData({ ...formData, amount: formatNumberWithCommas(value) });
+                    }
+                  }}
+                  className="pl-8"
+                  required
+                />
+              </div>
             </div>
 
             <div>
@@ -113,7 +120,7 @@ export function AddTransactionModal({ open, onClose, onSubmit }: AddTransactionM
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map(cat => (
+                  {categories.map(cat => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                   ))}
                 </SelectContent>
