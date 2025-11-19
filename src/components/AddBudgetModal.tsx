@@ -109,14 +109,6 @@ export function AddBudgetModal({ open, onClose, onSubmit }: AddBudgetModalProps)
               />
             </div>
 
-            <div>
-              <Label>End Date (Optional)</Label>
-              <Input
-                type="date"
-                value={formData.end_date}
-                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-              />
-            </div>
           </div>
 
           <DialogFooter className="mt-6">

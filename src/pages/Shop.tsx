@@ -154,13 +154,17 @@ const Shop = () => {
                     </div>
 
                     {owned ? (
-                      <Button disabled>Owned</Button>
+                      <Button disabled className="w-full">
+                        <Check className="h-4 w-4 mr-2" />
+                        Owned
+                      </Button>
                     ) : (
                       <Button
                         onClick={() => handlePurchase(item)}
                         disabled={!canAfford}
+                        className="w-full"
                       >
-                        {canAfford ? 'Purchase' : 'Not Enough Points'}
+                        {canAfford ? 'Purchase' : 'Insufficient'}
                       </Button>
                     )}
                   </div>

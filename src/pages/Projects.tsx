@@ -15,23 +15,21 @@ import { Label } from "@/components/ui/label";
 const Projects = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [viewHistoryProject, setViewHistoryProject] = useState<string | null>(null);
   const [contributionAmount, setContributionAmount] = useState('');
-  const [contributionNote, setContributionNote] = useState('');
-  const { projects, loading, createProject, deleteProject, addContribution } = useProjects();
+  const { projects, loading, createProject, deleteProject, addContribution, getProjectHistory } = useProjects();
 
   const handleContribution = async () => {
     if (!selectedProject || !contributionAmount) return;
 
     const success = await addContribution(
       selectedProject,
-      parseFloat(contributionAmount),
-      contributionNote || 'Project contribution'
+      parseFloat(contributionAmount)
     );
 
     if (success) {
       setSelectedProject(null);
       setContributionAmount('');
-      setContributionNote('');
     }
   };
 
@@ -139,14 +137,22 @@ const Projects = () => {
                                 }
                               </div>
                             )}
-                            <Button 
-                              size="sm" 
-                              className="w-full"
-                              onClick={() => setSelectedProject(project.id)}
-                            >
-                              <DollarSign className="h-4 w-4 mr-2" />
-                              Add Contribution
-                            </Button>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button 
+                                size="sm" 
+                                onClick={() => setSelectedProject(project.id)}
+                              >
+                                <DollarSign className="h-4 w-4 mr-2" />
+                                Add Funds
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => setViewHistoryProject(project.id)}
+                              >
+                                View History
+                              </Button>
+                            </div>
                           </div>
                         </>
                       )}
@@ -185,14 +191,6 @@ const Projects = () => {
                 onChange={(e) => setContributionAmount(e.target.value)}
               />
             </div>
-            <div>
-              <Label>Note (Optional)</Label>
-              <Input
-                placeholder="e.g., Monthly savings"
-                value={contributionNote}
-                onChange={(e) => setContributionNote(e.target.value)}
-              />
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedProject(null)}>
@@ -202,6 +200,29 @@ const Projects = () => {
               Add Contribution
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewHistoryProject} onOpenChange={() => setViewHistoryProject(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Contribution History</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {viewHistoryProject && getProjectHistory(viewHistoryProject).map((contribution) => (
+              <div key={contribution.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div>
+                  <div className="font-semibold">₱{Number(contribution.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {format(new Date(contribution.contribution_date), 'MMM dd, yyyy - hh:mm a')}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {viewHistoryProject && getProjectHistory(viewHistoryProject).length === 0 && (
+              <p className="text-center text-muted-foreground py-8">No contributions yet</p>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </DashboardLayout>

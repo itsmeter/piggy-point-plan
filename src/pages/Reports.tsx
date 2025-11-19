@@ -4,6 +4,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useBudgets } from "@/hooks/useBudgets";
 import { Progress } from "@/components/ui/progress";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { SavingsLineChart } from "@/components/SavingsLineChart";
 
 const Reports = () => {
   const { transactions } = useTransactions();
@@ -71,31 +72,7 @@ const Reports = () => {
             <CardTitle>Saved Money per Month (Last 6 Months)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              {last6Months.map((month) => {
-                const percentage = maxSaved > 0 ? (month.saved / maxSaved) * 100 : 0;
-                const isPositive = month.saved >= 0;
-
-                return (
-                  <div key={month.month}>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium">{month.month}</span>
-                      <span className={`font-semibold ${isPositive ? 'text-success' : 'text-destructive'}`}>
-                        ₱{Math.abs(month.saved).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={Math.abs(percentage)} 
-                      className={isPositive ? '[&>div]:bg-success' : '[&>div]:bg-destructive'}
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>Income: ₱{month.income.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
-                      <span>Expenses: ₱{month.expenses.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <SavingsLineChart data={last6Months} />
           </CardContent>
         </Card>
 

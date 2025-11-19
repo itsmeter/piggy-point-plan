@@ -18,9 +18,19 @@ export interface Project {
   updated_at: string;
 }
 
+export interface ProjectContribution {
+  id: string;
+  project_id: string;
+  user_id: string;
+  amount: number;
+  contribution_date: string;
+  created_at: string;
+}
+
 export function useProjects() {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [projectContributions, setProjectContributions] = useState<ProjectContribution[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchProjects = async () => {
@@ -28,15 +38,24 @@ export function useProjects() {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const [projectsData, contributionsData] = await Promise.all([
+        supabase
+          .from('projects')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('project_contributions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('contribution_date', { ascending: false })
+      ]);
 
-      if (error) throw error;
+      if (projectsData.error) throw projectsData.error;
+      if (contributionsData.error) throw contributionsData.error;
 
-      setProjects((data as Project[]) || []);
+      setProjects((projectsData.data as Project[]) || []);
+      setProjectContributions((contributionsData.data as ProjectContribution[]) || []);
     } catch (error: any) {
       console.error('Error fetching projects:', error);
       toast({
@@ -143,10 +162,21 @@ export function useProjects() {
     }
   };
 
-  const addContribution = async (projectId: string, amount: number, description: string) => {
+  const addContribution = async (projectId: string, amount: number) => {
     if (!user) return;
 
     try {
+      // Add to contribution history
+      const { error: contribError } = await supabase
+        .from('project_contributions')
+        .insert({
+          project_id: projectId,
+          user_id: user.id,
+          amount: Number(amount)
+        });
+
+      if (contribError) throw contribError;
+
       // Add transaction
       const { error: txError } = await supabase
         .from('transactions')
@@ -155,7 +185,7 @@ export function useProjects() {
           amount: Number(amount),
           type: 'project-contribution',
           category: 'Project',
-          details: description,
+          details: 'Project contribution',
           transaction_date: new Date().toISOString(),
           project_id: projectId
         });
@@ -188,6 +218,10 @@ export function useProjects() {
     }
   };
 
+  const getProjectHistory = (projectId: string) => {
+    return projectContributions.filter(c => c.project_id === projectId);
+  };
+
   useEffect(() => {
     fetchProjects();
   }, [user]);
@@ -199,6 +233,7 @@ export function useProjects() {
     updateProject,
     deleteProject,
     addContribution,
+    getProjectHistory,
     refreshProjects: fetchProjects
   };
 }
