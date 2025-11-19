@@ -108,128 +108,73 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Middle Section */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* Motivational Quote */}
-          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                {motivationalQuote.icon}
-                Daily Motivation
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-foreground italic text-lg leading-relaxed">
-                "{motivationalQuote.text}"
-              </p>
-              <div className="flex gap-2 mt-4">
-                <Button variant="ghost" size="sm">Copy Quote</Button>
-                <Button variant="ghost" size="sm">Save</Button>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Income vs Expense */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Income vs Expense</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Income</span>
-                <span className="text-lg font-semibold text-success">₱25,000.00</span>
-              </div>
-              <Progress value={100} className="h-2 bg-success/20" />
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Expenses</span>
-                <span className="text-lg font-semibold text-destructive">₱9,750.00</span>
-              </div>
-              <Progress value={39} className="h-2 bg-destructive/20" />
-              
-              <div className="pt-2 border-t">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Net Savings</span>
-                  <span className="text-lg font-bold text-success">₱15,250.00</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Transactions */}
+        {/* Income vs Expense */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Recent Transactions</CardTitle>
-              <Button variant="ghost" size="sm">View All</Button>
-            </div>
-          </CardHeader>
+          <CardHeader><CardTitle>Income vs. Expense This Month</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <TransactionItem
-                title="Grocery Shopping"
-                category="Food"
-                amount="₱1,250.00"
-                date="Today, 2:30 PM"
-                type="expense"
-              />
-              <TransactionItem
-                title="Monthly Salary"
-                category="Income"
-                amount="₱25,000.00"
-                date="Yesterday"
-                type="income"
-              />
-              <TransactionItem
-                title="Internet Bill"
-                category="Bills"
-                amount="₱1,500.00"
-                date="2 days ago"
-                type="expense"
-              />
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <ArrowDownRight className="h-4 w-4 text-success" />
+                    <span className="text-sm text-muted-foreground">Income</span>
+                  </div>
+                  <span className="font-semibold text-success">₱{monthlyIncome.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <Progress value={monthlyIncome > 0 ? 100 : 0} className="[&>div]:bg-success" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <ArrowUpRight className="h-4 w-4 text-destructive" />
+                    <span className="text-sm text-muted-foreground">Expenses</span>
+                  </div>
+                  <span className="font-semibold text-destructive">₱{monthlyExpenses.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <Progress value={monthlyIncome > 0 ? (monthlyExpenses / monthlyIncome) * 100 : 0} className="[&>div]:bg-destructive" />
+              </div>
+              <div className="pt-4 border-t flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Net Savings</span>
+                <span className={`font-bold ${monthlyIncome - monthlyExpenses >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  ₱{(monthlyIncome - monthlyExpenses).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>
-      </div>
 
+        {/* Recent Transactions */}
+        <Card>
+          <CardHeader><CardTitle>Recent Transactions</CardTitle></CardHeader>
+          <CardContent>
+            {transactions.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No transactions yet — Add your first transaction</p>
+            ) : (
+              <div className="space-y-3">
+                {transactions.slice(0, 5).map((tx) => (
+                  <div key={tx.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-full ${tx.type === 'income' ? 'bg-success/10' : 'bg-destructive/10'}`}>
+                        {tx.type === 'income' ? <ArrowDownRight className="h-4 w-4 text-success" /> : <ArrowUpRight className="h-4 w-4 text-destructive" />}
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm">{tx.category || 'Uncategorized'}</div>
+                        <div className="text-xs text-muted-foreground">{format(new Date(tx.transaction_date), 'MMM dd, yyyy')}</div>
+                      </div>
+                    </div>
+                    <span className={`font-semibold ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
+                      {tx.type === 'income' ? '+' : '-'}₱{Number(tx.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
       {showSetup && <FirstTimeSetup onComplete={handleSetupComplete} />}
     </DashboardLayout>
-  );
-};
-
-const TransactionItem = ({
-  title,
-  category,
-  amount,
-  date,
-  type,
-}: {
-  title: string;
-  category: string;
-  amount: string;
-  date: string;
-  type: "income" | "expense";
-}) => {
-  return (
-    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors">
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-full ${type === "income" ? "bg-success/10" : "bg-destructive/10"}`}>
-          {type === "income" ? (
-            <ArrowUpRight className={`h-4 w-4 text-success`} />
-          ) : (
-            <ArrowDownRight className={`h-4 w-4 text-destructive`} />
-          )}
-        </div>
-        <div>
-          <p className="font-medium text-foreground">{title}</p>
-          <p className="text-sm text-muted-foreground">{category} • {date}</p>
-        </div>
-      </div>
-      <span className={`font-semibold ${type === "income" ? "text-success" : "text-foreground"}`}>
-        {type === "income" ? "+" : "-"}{amount}
-      </span>
-    </div>
   );
 };
 
