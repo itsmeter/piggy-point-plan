@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { formatNumberWithCommas, parseFormattedNumber } from '@/lib/utils';
 
 interface AddBudgetModalProps {
   open: boolean;
@@ -31,7 +32,7 @@ export function AddBudgetModal({ open, onClose, onSubmit }: AddBudgetModalProps)
     setLoading(true);
     const success = await onSubmit({
       ...formData,
-      amount: parseFloat(formData.amount),
+      amount: parseFloat(parseFormattedNumber(formData.amount)),
       start_date: formData.start_date,
       end_date: formData.end_date || null,
       status: 'active'
@@ -70,15 +71,23 @@ export function AddBudgetModal({ open, onClose, onSubmit }: AddBudgetModalProps)
             </div>
 
             <div>
-              <Label>Amount (₱)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                required
-              />
+              <Label>Amount</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                <Input
+                  type="text"
+                  placeholder="0"
+                  value={formData.amount}
+                  onChange={(e) => {
+                    const value = parseFormattedNumber(e.target.value);
+                    if (value === '' || !isNaN(Number(value))) {
+                      setFormData({ ...formData, amount: formatNumberWithCommas(value) });
+                    }
+                  }}
+                  className="pl-8"
+                  required
+                />
+              </div>
             </div>
 
             <div>

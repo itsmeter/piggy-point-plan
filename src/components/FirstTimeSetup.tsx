@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Trophy } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { formatNumberWithCommas, parseFormattedNumber } from "@/lib/utils";
 
 interface FirstTimeSetupProps {
   onComplete: () => void;
@@ -29,7 +31,7 @@ const FirstTimeSetup = ({ onComplete }: FirstTimeSetupProps) => {
     rentDueDate: "",
   });
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 1) {
       if (!formData.income || !formData.foodBudget || !formData.transportBudget || 
           !formData.entertainmentBudget || !formData.shoppingBudget) {
@@ -57,12 +59,73 @@ const FirstTimeSetup = ({ onComplete }: FirstTimeSetupProps) => {
     if (step < 3) {
       setStep(step + 1);
     } else {
-      // Save data and complete setup
-      toast({
-        title: "🎉 Setup Complete!",
-        description: "You've earned 250 PiggyPoints!",
-      });
-      onComplete();
+      // Save data to database
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Save to user_settings
+        await supabase.from('user_settings').upsert({
+          user_id: user.id,
+          monthly_income: parseFloat(parseFormattedNumber(formData.income)),
+          food_budget: parseFloat(parseFormattedNumber(formData.foodBudget)),
+          transportation_budget: parseFloat(parseFormattedNumber(formData.transportBudget)),
+          entertainment_budget: parseFloat(parseFormattedNumber(formData.entertainmentBudget)),
+          shopping_budget: parseFloat(parseFormattedNumber(formData.shoppingBudget)),
+          has_bills: formData.hasBillsAndRent,
+          internet_bill: formData.hasBillsAndRent ? parseFloat(parseFormattedNumber(formData.internetBill)) : 0,
+          electricity_bill: formData.hasBillsAndRent ? parseFloat(parseFormattedNumber(formData.electricityBill)) : 0,
+          water_bill: formData.hasBillsAndRent ? parseFloat(parseFormattedNumber(formData.waterBill)) : 0,
+          rent: formData.hasBillsAndRent ? parseFloat(parseFormattedNumber(formData.rent)) : 0,
+          bill_due_date: formData.hasBillsAndRent ? parseInt(formData.billsDueDate) : null,
+          rent_due_date: formData.hasBillsAndRent ? parseInt(formData.rentDueDate) : null,
+          first_setup_completed: true
+        });
+
+        // Create initial budgets
+        const budgets = [
+          { name: 'Food', amount: parseFloat(parseFormattedNumber(formData.foodBudget)) },
+          { name: 'Transportation', amount: parseFloat(parseFormattedNumber(formData.transportBudget)) },
+          { name: 'Entertainment', amount: parseFloat(parseFormattedNumber(formData.entertainmentBudget)) },
+          { name: 'Shopping', amount: parseFloat(parseFormattedNumber(formData.shoppingBudget)) },
+        ];
+
+        if (formData.hasBillsAndRent) {
+          budgets.push(
+            { name: 'Bills', amount: parseFloat(parseFormattedNumber(formData.internetBill)) + parseFloat(parseFormattedNumber(formData.electricityBill)) + parseFloat(parseFormattedNumber(formData.waterBill)) },
+            { name: 'Rent', amount: parseFloat(parseFormattedNumber(formData.rent)) }
+          );
+        }
+
+        for (const budget of budgets) {
+          await supabase.from('budgets').insert({
+            user_id: user.id,
+            name: budget.name,
+            amount: budget.amount,
+            type: 'monthly',
+            start_date: new Date().toISOString().split('T')[0],
+            status: 'active'
+          });
+        }
+
+        // Award PiggyPoints
+        await supabase.from('piggy_points').update({
+          total_points: 250
+        }).eq('user_id', user.id);
+
+        toast({
+          title: "🎉 Setup Complete!",
+          description: "You've earned 250 PiggyPoints!",
+        });
+        onComplete();
+      } catch (error) {
+        console.error('Error saving setup:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save setup. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -81,13 +144,22 @@ const FirstTimeSetup = ({ onComplete }: FirstTimeSetupProps) => {
             <>
               <div className="space-y-2">
                 <Label htmlFor="income">Monthly Income</Label>
-                <Input
-                  id="income"
-                  type="number"
-                  placeholder="Enter your monthly income"
-                  value={formData.income}
-                  onChange={(e) => setFormData({ ...formData, income: e.target.value })}
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                  <Input
+                    id="income"
+                    type="text"
+                    placeholder="0"
+                    value={formData.income}
+                    onChange={(e) => {
+                      const value = parseFormattedNumber(e.target.value);
+                      if (value === '' || !isNaN(Number(value))) {
+                        setFormData({ ...formData, income: formatNumberWithCommas(value) });
+                      }
+                    }}
+                    className="pl-8"
+                  />
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -95,46 +167,82 @@ const FirstTimeSetup = ({ onComplete }: FirstTimeSetupProps) => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="food">Food</Label>
-                  <Input
-                    id="food"
-                    type="number"
-                    placeholder="Food budget"
-                    value={formData.foodBudget}
-                    onChange={(e) => setFormData({ ...formData, foodBudget: e.target.value })}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                    <Input
+                      id="food"
+                      type="text"
+                      placeholder="0"
+                      value={formData.foodBudget}
+                      onChange={(e) => {
+                        const value = parseFormattedNumber(e.target.value);
+                        if (value === '' || !isNaN(Number(value))) {
+                          setFormData({ ...formData, foodBudget: formatNumberWithCommas(value) });
+                        }
+                      }}
+                      className="pl-8"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="transport">Transportation</Label>
-                  <Input
-                    id="transport"
-                    type="number"
-                    placeholder="Transportation budget"
-                    value={formData.transportBudget}
-                    onChange={(e) => setFormData({ ...formData, transportBudget: e.target.value })}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                    <Input
+                      id="transport"
+                      type="text"
+                      placeholder="0"
+                      value={formData.transportBudget}
+                      onChange={(e) => {
+                        const value = parseFormattedNumber(e.target.value);
+                        if (value === '' || !isNaN(Number(value))) {
+                          setFormData({ ...formData, transportBudget: formatNumberWithCommas(value) });
+                        }
+                      }}
+                      className="pl-8"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="entertainment">Entertainment</Label>
-                  <Input
-                    id="entertainment"
-                    type="number"
-                    placeholder="Entertainment budget"
-                    value={formData.entertainmentBudget}
-                    onChange={(e) => setFormData({ ...formData, entertainmentBudget: e.target.value })}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                    <Input
+                      id="entertainment"
+                      type="text"
+                      placeholder="0"
+                      value={formData.entertainmentBudget}
+                      onChange={(e) => {
+                        const value = parseFormattedNumber(e.target.value);
+                        if (value === '' || !isNaN(Number(value))) {
+                          setFormData({ ...formData, entertainmentBudget: formatNumberWithCommas(value) });
+                        }
+                      }}
+                      className="pl-8"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="shopping">Shopping</Label>
-                  <Input
-                    id="shopping"
-                    type="number"
-                    placeholder="Shopping budget"
-                    value={formData.shoppingBudget}
-                    onChange={(e) => setFormData({ ...formData, shoppingBudget: e.target.value })}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                    <Input
+                      id="shopping"
+                      type="text"
+                      placeholder="0"
+                      value={formData.shoppingBudget}
+                      onChange={(e) => {
+                        const value = parseFormattedNumber(e.target.value);
+                        if (value === '' || !isNaN(Number(value))) {
+                          setFormData({ ...formData, shoppingBudget: formatNumberWithCommas(value) });
+                        }
+                      }}
+                      className="pl-8"
+                    />
+                  </div>
                 </div>
               </div>
             </>
@@ -162,46 +270,82 @@ const FirstTimeSetup = ({ onComplete }: FirstTimeSetupProps) => {
                   
                   <div className="space-y-2">
                     <Label htmlFor="internet">Internet Bill</Label>
-                    <Input
-                      id="internet"
-                      type="number"
-                      placeholder="Amount"
-                      value={formData.internetBill}
-                      onChange={(e) => setFormData({ ...formData, internetBill: e.target.value })}
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                      <Input
+                        id="internet"
+                        type="text"
+                        placeholder="0"
+                        value={formData.internetBill}
+                        onChange={(e) => {
+                          const value = parseFormattedNumber(e.target.value);
+                          if (value === '' || !isNaN(Number(value))) {
+                            setFormData({ ...formData, internetBill: formatNumberWithCommas(value) });
+                          }
+                        }}
+                        className="pl-8"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="electricity">Electricity Bill</Label>
-                    <Input
-                      id="electricity"
-                      type="number"
-                      placeholder="Amount"
-                      value={formData.electricityBill}
-                      onChange={(e) => setFormData({ ...formData, electricityBill: e.target.value })}
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                      <Input
+                        id="electricity"
+                        type="text"
+                        placeholder="0"
+                        value={formData.electricityBill}
+                        onChange={(e) => {
+                          const value = parseFormattedNumber(e.target.value);
+                          if (value === '' || !isNaN(Number(value))) {
+                            setFormData({ ...formData, electricityBill: formatNumberWithCommas(value) });
+                          }
+                        }}
+                        className="pl-8"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="water">Water Bill</Label>
-                    <Input
-                      id="water"
-                      type="number"
-                      placeholder="Amount"
-                      value={formData.waterBill}
-                      onChange={(e) => setFormData({ ...formData, waterBill: e.target.value })}
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                      <Input
+                        id="water"
+                        type="text"
+                        placeholder="0"
+                        value={formData.waterBill}
+                        onChange={(e) => {
+                          const value = parseFormattedNumber(e.target.value);
+                          if (value === '' || !isNaN(Number(value))) {
+                            setFormData({ ...formData, waterBill: formatNumberWithCommas(value) });
+                          }
+                        }}
+                        className="pl-8"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="rent">Monthly Rent</Label>
-                    <Input
-                      id="rent"
-                      type="number"
-                      placeholder="Amount"
-                      value={formData.rent}
-                      onChange={(e) => setFormData({ ...formData, rent: e.target.value })}
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                      <Input
+                        id="rent"
+                        type="text"
+                        placeholder="0"
+                        value={formData.rent}
+                        onChange={(e) => {
+                          const value = parseFormattedNumber(e.target.value);
+                          if (value === '' || !isNaN(Number(value))) {
+                            setFormData({ ...formData, rent: formatNumberWithCommas(value) });
+                          }
+                        }}
+                        className="pl-8"
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

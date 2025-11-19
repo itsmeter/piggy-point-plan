@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { formatNumberWithCommas, parseFormattedNumber } from '@/lib/utils';
 
 interface AddProjectModalProps {
   open: boolean;
@@ -31,7 +32,7 @@ export function AddProjectModal({ open, onClose, onSubmit }: AddProjectModalProp
     setLoading(true);
     const success = await onSubmit({
       ...formData,
-      budget: formData.budget ? parseFloat(formData.budget) : null,
+      budget: formData.budget ? parseFloat(parseFormattedNumber(formData.budget)) : null,
       start_date: formData.start_date,
       end_date: formData.end_date || null,
       status: 'active'
@@ -80,14 +81,22 @@ export function AddProjectModal({ open, onClose, onSubmit }: AddProjectModalProp
             </div>
 
             <div>
-              <Label>Target Amount (₱)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={formData.budget}
-                onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-              />
+              <Label>Target Amount</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₱</span>
+                <Input
+                  type="text"
+                  placeholder="0"
+                  value={formData.budget}
+                  onChange={(e) => {
+                    const value = parseFormattedNumber(e.target.value);
+                    if (value === '' || !isNaN(Number(value))) {
+                      setFormData({ ...formData, budget: formatNumberWithCommas(value) });
+                    }
+                  }}
+                  className="pl-8"
+                />
+              </div>
             </div>
 
             <div>
