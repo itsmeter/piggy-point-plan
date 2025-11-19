@@ -1,13 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Wallet, TrendingUp, Calendar, Trophy, Sparkles, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Wallet, TrendingUp, Calendar, Trophy, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import FirstTimeSetup from "@/components/FirstTimeSetup";
 import { useState, useEffect } from "react";
+import { useTransactions } from "@/hooks/useTransactions";
+import { useBudgets } from "@/hooks/useBudgets";
+import { usePiggyPoints } from "@/hooks/usePiggyPoints";
+import { format } from "date-fns";
 
 const Dashboard = () => {
   const [showSetup, setShowSetup] = useState(false);
+  const { transactions, balance } = useTransactions(10);
+  const { budgets } = useBudgets();
+  const { piggyPoints } = usePiggyPoints();
 
   useEffect(() => {
     const isFirstTime = localStorage.getItem("isFirstTime");
@@ -21,10 +27,21 @@ const Dashboard = () => {
     setShowSetup(false);
   };
 
-  const motivationalQuote = {
-    text: "Every peso you save is a step closer to freedom.",
-    icon: <Sparkles className="h-5 w-5" />,
-  };
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  
+  const monthlyTransactions = transactions.filter(t => {
+    const date = new Date(t.transaction_date);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  });
+
+  const monthlyIncome = monthlyTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
+  const monthlyExpenses = monthlyTransactions.filter(t => t.type === 'expense' || t.type === 'project-contribution').reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const activeBudgets = budgets.filter(b => b.status === 'active');
+  const totalBudget = activeBudgets.reduce((sum, b) => sum + Number(b.amount), 0);
+  const totalSpent = activeBudgets.reduce((sum, b) => sum + Number(b.spent), 0);
+  const budgetPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   return (
     <DashboardLayout>
@@ -45,11 +62,8 @@ const Dashboard = () => {
               <Wallet className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">₱45,230.00</div>
-              <p className="text-xs text-success flex items-center mt-1">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +12% from last month
-              </p>
+              <div className="text-2xl font-bold text-foreground">₱{balance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+              <p className="text-xs text-muted-foreground mt-1">{monthlyIncome > monthlyExpenses ? 'Positive' : 'Negative'} cash flow</p>
             </CardContent>
           </Card>
 
@@ -61,9 +75,9 @@ const Dashboard = () => {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">₱15,000.00</div>
-              <Progress value={65} className="mt-2" />
-              <p className="text-xs text-muted-foreground mt-1">₱9,750 spent</p>
+              <div className="text-2xl font-bold text-foreground">₱{totalBudget.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+              <Progress value={budgetPercentage} className="mt-2" />
+              <p className="text-xs text-muted-foreground mt-1">₱{totalSpent.toLocaleString('en-PH', { minimumFractionDigits: 2 })} spent</p>
             </CardContent>
           </Card>
 
@@ -75,10 +89,8 @@ const Dashboard = () => {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">₱3,450.00</div>
-              <p className="text-xs text-warning flex items-center mt-1">
-                3 bills due this week
-              </p>
+              <div className="text-2xl font-bold text-foreground">₱{monthlyExpenses.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+              <p className="text-xs text-muted-foreground mt-1">{monthlyTransactions.length} transactions</p>
             </CardContent>
           </Card>
 
@@ -90,8 +102,8 @@ const Dashboard = () => {
               <Trophy className="h-4 w-4 text-piggy-gold" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">1,250</div>
-              <p className="text-xs text-muted-foreground mt-1">Level 5 • Gold Saver</p>
+              <div className="text-2xl font-bold text-foreground">{piggyPoints?.total_points || 0}</div>
+              <p className="text-xs text-muted-foreground mt-1">Level {piggyPoints?.current_level || 1}</p>
             </CardContent>
           </Card>
         </div>

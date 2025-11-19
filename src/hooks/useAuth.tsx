@@ -54,20 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    if (!error && data.user) {
-      // Initialize piggy points and settings
-      setTimeout(async () => {
-        await supabase.from('piggy_points').insert({
-          user_id: data.user!.id,
-          total_points: 0
-        });
-        
-        await supabase.from('user_settings').insert({
-          user_id: data.user!.id
-        });
-      }, 0);
-    }
-
+    // Trigger now handles initialization atomically
     return { error };
   };
 
