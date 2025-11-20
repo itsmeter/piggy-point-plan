@@ -15,6 +15,7 @@ import Projects from "./pages/Projects";
 import Shop from "./pages/Shop";
 import Achievements from "./pages/Achievements";
 import Settings from "./pages/Settings";
+import AIAdvisor from "./pages/AIAdvisor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/shop" element={<Shop />} />
             <Route path="/achievements" element={<Achievements />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/ai-advisor" element={<AIAdvisor />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

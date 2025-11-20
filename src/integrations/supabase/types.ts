@@ -47,6 +47,88 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_advisor_chats: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_advisor_chats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_advisor_settings: {
+        Row: {
+          created_at: string
+          financial_plan: Json | null
+          id: string
+          is_enabled: boolean
+          monthly_income: number | null
+          onboarding_completed: boolean
+          onboarding_data: Json | null
+          plan_created_at: string | null
+          selected_character: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          financial_plan?: Json | null
+          id?: string
+          is_enabled?: boolean
+          monthly_income?: number | null
+          onboarding_completed?: boolean
+          onboarding_data?: Json | null
+          plan_created_at?: string | null
+          selected_character: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          financial_plan?: Json | null
+          id?: string
+          is_enabled?: boolean
+          monthly_income?: number | null
+          onboarding_completed?: boolean
+          onboarding_data?: Json | null
+          plan_created_at?: string | null
+          selected_character?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_advisor_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budgets: {
         Row: {
           amount: number
