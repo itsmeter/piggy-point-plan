@@ -1,6 +1,7 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { usePiggyPoints } from "@/hooks/usePiggyPoints";
@@ -14,7 +15,6 @@ import {
   Settings,
   Store,
   Award,
-  PiggyBank,
   Menu,
   X,
   Trophy,
@@ -72,8 +72,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-card border-b border-border z-50">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-2">
-            <PiggyBank className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">PiggySaving</span>
+            <img src={logo} alt="PiggyPoints" className="h-8 w-8" />
+            <span className="font-bold text-lg">PiggyPoints</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -147,8 +147,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="flex flex-col flex-grow bg-card border-r border-border overflow-y-auto">
           {/* Logo */}
           <div className="flex items-center gap-2 px-6 py-6">
-            <PiggyBank className="h-8 w-8 text-primary" />
-            <span className="font-bold text-xl">PiggySaving</span>
+            <img src={logo} alt="PiggyPoints" className="h-10 w-10" />
+            <span className="font-bold text-xl">PiggyPoints</span>
           </div>
 
           {/* PiggyPoints and Balance Display */}

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { PiggyBank, TrendingUp, Target, Award, Sparkles, ArrowRight } from "lucide-react";
+import { TrendingUp, Target, Award, Sparkles, ArrowRight } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -10,8 +11,8 @@ const Landing = () => {
       {/* Header */}
       <header className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <PiggyBank className="h-8 w-8 text-primary" />
-          <span className="text-2xl font-bold text-foreground">PiggySaving</span>
+          <img src={logo} alt="PiggyPoints" className="h-10 w-10" />
+          <span className="text-2xl font-bold text-foreground">PiggyPoints</span>
         </div>
         <div className="flex gap-3">
           <Button variant="ghost" onClick={() => navigate("/login")}>
@@ -37,7 +38,7 @@ const Landing = () => {
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Track expenses, set budgets, and earn rewards. PiggySaving makes personal finance simple, 
+            Track expenses, set budgets, and earn rewards. PiggyPoints makes personal finance simple, 
             clear, and surprisingly fun.
           </p>
           
@@ -81,7 +82,7 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-12 text-center text-muted-foreground">
-        <p>© 2024 PiggySaving. Made with ❤️ for better budgeting.</p>
+        <p>© 2024 PiggyPoints. Made with ❤️ for better budgeting.</p>
       </footer>
     </div>
   );
