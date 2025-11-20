@@ -2,6 +2,7 @@ import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
+import coinIcon from "@/assets/coin.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { usePiggyPoints } from "@/hooks/usePiggyPoints";
@@ -17,7 +18,6 @@ import {
   Award,
   Menu,
   X,
-  Trophy,
   LogOut,
   Eye,
   EyeOff,
@@ -92,7 +92,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </Button>
             </div>
             <div className="flex items-center gap-1 bg-piggy-gold/10 px-2 py-1 rounded-lg">
-              <Trophy className="h-3 w-3 text-piggy-gold" />
+              <img src={coinIcon} alt="PiggyPoints" className="h-4 w-4" />
               <span className="text-xs font-semibold">{piggyPoints?.total_points || 0}</span>
             </div>
             <Button
@@ -172,7 +172,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <div className="p-4 bg-gradient-to-br from-piggy-gold/10 to-piggy-gold/5 border border-piggy-gold/20 rounded-xl">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted-foreground">PiggyPoints</span>
-                <Trophy className="h-5 w-5 text-piggy-gold" />
+                <img src={coinIcon} alt="PiggyPoints" className="h-6 w-6" />
               </div>
               <div className="text-2xl font-bold">{piggyPoints?.total_points || 0}</div>
             </div>

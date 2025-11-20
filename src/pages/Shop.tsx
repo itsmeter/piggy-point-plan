@@ -6,6 +6,7 @@ import { Palette, Sparkles, Frame, Check } from "lucide-react";
 import { usePiggyPoints } from "@/hooks/usePiggyPoints";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import coinIcon from "@/assets/coin.png";
 
 const SHOP_ITEMS = [
   {
@@ -99,7 +100,7 @@ const Shop = () => {
                   {piggyPoints?.total_points || 0}
                 </div>
               </div>
-              <Sparkles className="h-12 w-12 text-piggy-gold" />
+              <img src={coinIcon} alt="PiggyPoints" className="h-12 w-12" />
             </div>
           </CardContent>
         </Card>
@@ -148,7 +149,7 @@ const Shop = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-piggy-gold" />
+                      <img src={coinIcon} alt="PiggyPoints" className="h-5 w-5" />
                       <span className="font-bold text-lg">{item.price}</span>
                       <span className="text-sm text-muted-foreground">points</span>
                     </div>
