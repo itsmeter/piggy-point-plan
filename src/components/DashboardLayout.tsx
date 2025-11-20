@@ -21,7 +21,8 @@ import {
   LogOut,
   Eye,
   EyeOff,
-  Wallet
+  Wallet,
+  MessageSquare
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -49,6 +50,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { name: "Budgets", href: "/budgets", icon: Target },
     { name: "Reports", href: "/reports", icon: BarChart3 },
     { name: "Projects", href: "/projects", icon: FolderKanban },
+    { name: "AI Advisor", href: "/ai-advisor", icon: MessageSquare },
     { name: "Shop", href: "/shop", icon: Store },
     { name: "Achievements", href: "/achievements", icon: Award },
     { name: "Settings", href: "/settings", icon: Settings },
