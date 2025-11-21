@@ -95,6 +95,7 @@ export function useAIAdvisor() {
 
   const completeOnboarding = async (monthlyIncome: number, onboardingData: any) => {
     if (!user) {
+      console.error('No user found when attempting to complete onboarding');
       toast({
         title: 'Authentication Required',
         description: 'Please log in to continue',
@@ -103,7 +104,14 @@ export function useAIAdvisor() {
       return null;
     }
 
+    console.log('Starting onboarding completion for user:', user.id);
+
     try {
+      // Validate input
+      if (!monthlyIncome || monthlyIncome <= 0) {
+        throw new Error('Please enter a valid monthly income');
+      }
+
       // Call AI to generate plan
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         'ai-advisor',
@@ -120,10 +128,18 @@ export function useAIAdvisor() {
 
       if (functionError) {
         console.error('Function invocation error:', functionError);
-        throw functionError;
+        throw new Error(functionError.message || 'Failed to generate financial plan');
+      }
+
+      console.log('Function response:', functionData);
+
+      // Check for error in response
+      if (functionData?.success === false) {
+        throw new Error(functionData.error || 'Failed to generate financial plan');
       }
 
       if (!functionData?.message) {
+        console.error('Invalid response structure:', functionData);
         throw new Error('Invalid response from AI advisor');
       }
 
@@ -157,6 +173,7 @@ export function useAIAdvisor() {
 
   const sendMessage = async (message: string) => {
     if (!user) {
+      console.error('No user found when attempting to send message');
       toast({
         title: 'Authentication Required',
         description: 'Please log in to continue',
@@ -178,10 +195,16 @@ export function useAIAdvisor() {
 
       if (functionError) {
         console.error('Function invocation error:', functionError);
-        throw functionError;
+        throw new Error(functionError.message || 'Failed to send message');
+      }
+
+      // Check for error in response
+      if (functionData?.success === false) {
+        throw new Error(functionData.error || 'Failed to send message');
       }
 
       if (!functionData?.message) {
+        console.error('Invalid response structure:', functionData);
         throw new Error('Invalid response from AI advisor');
       }
 
