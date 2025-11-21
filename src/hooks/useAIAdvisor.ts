@@ -94,7 +94,14 @@ export function useAIAdvisor() {
   };
 
   const completeOnboarding = async (monthlyIncome: number, onboardingData: any) => {
-    if (!user) return null;
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to continue',
+        variant: 'destructive',
+      });
+      return null;
+    }
 
     try {
       // Call AI to generate plan
@@ -111,7 +118,14 @@ export function useAIAdvisor() {
         }
       );
 
-      if (functionError) throw functionError;
+      if (functionError) {
+        console.error('Function invocation error:', functionError);
+        throw functionError;
+      }
+
+      if (!functionData?.message) {
+        throw new Error('Invalid response from AI advisor');
+      }
 
       // Update settings with plan
       const { error } = await supabase
@@ -142,7 +156,14 @@ export function useAIAdvisor() {
   };
 
   const sendMessage = async (message: string) => {
-    if (!user) return null;
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to continue',
+        variant: 'destructive',
+      });
+      return null;
+    }
 
     try {
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
@@ -155,7 +176,14 @@ export function useAIAdvisor() {
         }
       );
 
-      if (functionError) throw functionError;
+      if (functionError) {
+        console.error('Function invocation error:', functionError);
+        throw functionError;
+      }
+
+      if (!functionData?.message) {
+        throw new Error('Invalid response from AI advisor');
+      }
 
       await fetchChatHistory();
       return functionData.message;
