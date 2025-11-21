@@ -27,14 +27,57 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (!user) {
-      throw new Error("Not authenticated");
+      console.error("Authentication failed: No user found");
+      return new Response(
+        JSON.stringify({ error: "Not authenticated. Please log in and try again." }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    const { action, data } = await req.json();
+    console.log("User authenticated:", user.id);
+
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (error) {
+      console.error("Invalid JSON in request body:", error);
+      return new Response(
+        JSON.stringify({ error: "Invalid request format" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { action, data } = requestBody;
+
+    if (!action) {
+      return new Response(
+        JSON.stringify({ error: "Missing required field: action" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    console.log("Processing action:", action);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("LOVABLE_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ error: "AI service not configured. Please contact support." }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     // Fetch user's settings and data
@@ -80,6 +123,24 @@ Your job is to:
 Always respond in a friendly, conversational tone as ${characterName}.`;
 
     if (action === "generate_plan") {
+      if (!data?.monthlyIncome || !data?.onboardingAnswers) {
+        console.error("Missing required fields for generate_plan:", { 
+          hasIncome: !!data?.monthlyIncome, 
+          hasAnswers: !!data?.onboardingAnswers 
+        });
+        return new Response(
+          JSON.stringify({ 
+            error: "Missing required fields. Please provide monthly income and onboarding answers." 
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      console.log("Generating plan for income:", data.monthlyIncome);
+      
       systemPrompt += `\n\nThe user has completed onboarding. Generate a comprehensive 1-month financial plan based on their income of ₱${data.monthlyIncome} and the following information:
 ${JSON.stringify(data.onboardingAnswers, null, 2)}
 
@@ -96,6 +157,18 @@ Return your response as a detailed financial plan with specific amounts and perc
     let messages = [];
 
     if (action === "chat") {
+      if (!data?.message) {
+        return new Response(
+          JSON.stringify({ error: "Missing required field: message" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      console.log("Fetching chat history for user:", user.id);
+      
       // Fetch chat history
       const { data: chatHistory } = await supabaseClient
         .from("ai_advisor_chats")
@@ -126,6 +199,8 @@ Return your response as a detailed financial plan with specific amounts and perc
       ];
     }
 
+    console.log("Calling AI gateway with", messages.length, "messages");
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -139,6 +214,9 @@ Return your response as a detailed financial plan with specific amounts and perc
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("AI gateway error:", response.status, errorText);
+      
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
@@ -157,13 +235,31 @@ Return your response as a detailed financial plan with specific amounts and perc
           }
         );
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error("AI gateway error");
+      
+      return new Response(
+        JSON.stringify({ error: "AI service temporarily unavailable. Please try again." }),
+        {
+          status: 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     const aiResponse = await response.json();
+    
+    if (!aiResponse.choices || !aiResponse.choices[0]?.message?.content) {
+      console.error("Invalid AI response format:", aiResponse);
+      return new Response(
+        JSON.stringify({ error: "Invalid response from AI service" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+    
     const assistantMessage = aiResponse.choices[0].message.content;
+    console.log("AI response received, length:", assistantMessage.length);
 
     if (action === "chat") {
       // Save assistant message
@@ -174,14 +270,27 @@ Return your response as a detailed financial plan with specific amounts and perc
       });
     }
 
-    return new Response(JSON.stringify({ message: assistantMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        message: assistantMessage 
+      }), 
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   } catch (error: any) {
-    console.error("Error in ai-advisor function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("Unexpected error in ai-advisor function:", error);
+    return new Response(
+      JSON.stringify({ 
+        error: "An unexpected error occurred. Please try again.",
+        details: error.message 
+      }), 
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 });
