@@ -3,7 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -20,6 +22,48 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Load user's active theme on app start
+function ThemeLoader() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadTheme = async () => {
+      try {
+        const { data: settings } = await supabase
+          .from('user_settings')
+          .select('active_theme_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!settings?.active_theme_id) return;
+
+        const { data: themeItem } = await supabase
+          .from('shop_items')
+          .select('config')
+          .eq('id', settings.active_theme_id)
+          .single();
+
+        if (!themeItem?.config) return;
+
+        const root = document.documentElement;
+        const config = themeItem.config as Record<string, any>;
+
+        if (config.primary) root.style.setProperty('--primary', config.primary);
+        if (config.primaryGlow) root.style.setProperty('--primary-glow', config.primaryGlow);
+        if (config.gradient) root.style.setProperty('--gradient-primary', config.gradient);
+      } catch (error) {
+        console.error('Error loading theme:', error);
+      }
+    };
+
+    loadTheme();
+  }, [user]);
+
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -27,6 +71,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ThemeLoader />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />

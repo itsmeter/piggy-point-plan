@@ -533,6 +533,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          active_theme_id: string | null
           bill_due_date: number | null
           created_at: string
           electricity_bill: number | null
@@ -554,6 +555,7 @@ export type Database = {
           water_bill: number | null
         }
         Insert: {
+          active_theme_id?: string | null
           bill_due_date?: number | null
           created_at?: string
           electricity_bill?: number | null
@@ -575,6 +577,7 @@ export type Database = {
           water_bill?: number | null
         }
         Update: {
+          active_theme_id?: string | null
           bill_due_date?: number | null
           created_at?: string
           electricity_bill?: number | null
@@ -596,6 +599,13 @@ export type Database = {
           water_bill?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "user_settings_active_theme_id_fkey"
+            columns: ["active_theme_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_settings_user_id_fkey"
             columns: ["user_id"]
