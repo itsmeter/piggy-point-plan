@@ -2,85 +2,33 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Palette, Sparkles, Frame, Check } from "lucide-react";
+import { Palette, Sparkles, Frame, Check, Loader2 } from "lucide-react";
 import { usePiggyPoints } from "@/hooks/usePiggyPoints";
-import { useState } from "react";
-import { toast } from "@/hooks/use-toast";
+import { useShopPurchases } from "@/hooks/useShopPurchases";
 import coinIcon from "@/assets/coin.png";
 
-const SHOP_ITEMS = [
-  {
-    id: 'theme-ocean',
-    name: 'Ocean Blue Theme',
-    description: 'Cool blue gradient theme with wave animations',
-    type: 'theme',
-    price: 500,
-    icon: Palette,
-    preview: 'linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(200 100% 40%) 100%)'
-  },
-  {
-    id: 'theme-sunset',
-    name: 'Sunset Orange Theme',
-    description: 'Warm orange and pink gradient theme',
-    type: 'theme',
-    price: 500,
-    icon: Palette,
-    preview: 'linear-gradient(135deg, hsl(25 100% 60%) 0%, hsl(340 100% 60%) 100%)'
-  },
-  {
-    id: 'theme-forest',
-    name: 'Forest Green Theme',
-    description: 'Nature-inspired green gradient theme',
-    type: 'theme',
-    price: 500,
-    icon: Palette,
-    preview: 'linear-gradient(135deg, hsl(140 60% 40%) 0%, hsl(120 60% 30%) 100%)'
-  },
-  {
-    id: 'icons-premium',
-    name: 'Premium Icon Pack',
-    description: '50+ additional icons for transactions',
-    type: 'icons',
-    price: 750,
-    icon: Sparkles
-  },
-  {
-    id: 'frame-gold',
-    name: 'Gold Avatar Frame',
-    description: 'Show off with a golden border',
-    type: 'frame',
-    price: 300,
-    icon: Frame
-  },
-  {
-    id: 'frame-diamond',
-    name: 'Diamond Avatar Frame',
-    description: 'Exclusive diamond-studded frame',
-    type: 'frame',
-    price: 1000,
-    icon: Frame
+const getItemIcon = (type: string) => {
+  switch (type) {
+    case 'theme': return Palette;
+    case 'icons': return Sparkles;
+    case 'frame': return Frame;
+    default: return Sparkles;
   }
-];
+};
 
 const Shop = () => {
-  const { piggyPoints, spendPoints } = usePiggyPoints();
-  const [purchased, setPurchased] = useState<Set<string>>(new Set());
+  const { piggyPoints } = usePiggyPoints();
+  const { shopItems, loading, purchaseItem, isPurchased } = useShopPurchases();
 
-  const handlePurchase = async (item: typeof SHOP_ITEMS[0]) => {
-    if (purchased.has(item.id)) {
-      toast({
-        title: 'Already Owned',
-        description: 'You already own this item',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    const success = await spendPoints(item.price, item.name);
-    if (success) {
-      setPurchased(new Set([...purchased, item.id]));
-    }
-  };
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -107,10 +55,11 @@ const Shop = () => {
 
         {/* Shop Items */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {SHOP_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const owned = purchased.has(item.id);
+          {shopItems.map((item) => {
+            const Icon = getItemIcon(item.type);
+            const owned = isPurchased(item.id);
             const canAfford = (piggyPoints?.total_points || 0) >= item.price;
+            const gradient = item.config?.gradient;
 
             return (
               <Card key={item.id} className={owned ? 'border-success' : ''}>
@@ -140,14 +89,14 @@ const Shop = () => {
                     {item.description}
                   </p>
 
-                  {item.preview && (
+                  {gradient && (
                     <div 
-                      className="h-20 rounded-lg mb-4"
-                      style={{ background: item.preview }}
+                      className="h-20 rounded-lg mb-4 border border-border"
+                      style={{ background: gradient }}
                     />
                   )}
 
-                  <div className="flex items-center justify-between">
+                  <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <img src={coinIcon} alt="PiggyPoints" className="h-5 w-5" />
                       <span className="font-bold text-lg">{item.price}</span>
@@ -161,11 +110,11 @@ const Shop = () => {
                       </Button>
                     ) : (
                       <Button
-                        onClick={() => handlePurchase(item)}
+                        onClick={() => purchaseItem(item)}
                         disabled={!canAfford}
                         className="w-full"
                       >
-                        {canAfford ? 'Purchase' : 'Insufficient'}
+                        {canAfford ? 'Purchase' : 'Insufficient Points'}
                       </Button>
                     )}
                   </div>
