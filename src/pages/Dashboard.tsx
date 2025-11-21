@@ -8,6 +8,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useBudgets } from "@/hooks/useBudgets";
 import { usePiggyPoints } from "@/hooks/usePiggyPoints";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const [showSetup, setShowSetup] = useState(false);
@@ -16,14 +17,25 @@ const Dashboard = () => {
   const { piggyPoints } = usePiggyPoints();
 
   useEffect(() => {
-    const isFirstTime = localStorage.getItem("isFirstTime");
-    if (isFirstTime === "true") {
-      setShowSetup(true);
-    }
+    const checkFirstTimeSetup = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: settings } = await supabase
+        .from('user_settings')
+        .select('first_setup_completed')
+        .eq('user_id', user.id)
+        .single();
+
+      if (settings && !settings.first_setup_completed) {
+        setShowSetup(true);
+      }
+    };
+
+    checkFirstTimeSetup();
   }, []);
 
   const handleSetupComplete = () => {
-    localStorage.removeItem("isFirstTime");
     setShowSetup(false);
   };
 

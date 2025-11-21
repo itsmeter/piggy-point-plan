@@ -129,6 +129,30 @@ export type Database = {
           },
         ]
       }
+      ai_advisor_usage: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          tokens_used: number | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          tokens_used?: number | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          tokens_used?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       budgets: {
         Row: {
           amount: number

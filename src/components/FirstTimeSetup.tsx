@@ -8,10 +8,32 @@ import { useToast } from "@/hooks/use-toast";
 import { Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNumberWithCommas, parseFormattedNumber } from "@/lib/utils";
+import { z } from "zod";
 
 interface FirstTimeSetupProps {
   onComplete: () => void;
 }
+
+// Validation schema
+const setupSchema = z.object({
+  income: z.number().positive("Income must be positive").max(999999999, "Income exceeds maximum allowed"),
+  foodBudget: z.number().positive("Food budget must be positive").max(999999999, "Amount exceeds maximum allowed"),
+  transportBudget: z.number().positive("Transport budget must be positive").max(999999999, "Amount exceeds maximum allowed"),
+  entertainmentBudget: z.number().positive("Entertainment budget must be positive").max(999999999, "Amount exceeds maximum allowed"),
+  shoppingBudget: z.number().positive("Shopping budget must be positive").max(999999999, "Amount exceeds maximum allowed"),
+  billsDueDate: z.number().int().min(1).max(31).optional(),
+  rentDueDate: z.number().int().min(1).max(31).optional(),
+  internetBill: z.number().nonnegative("Bill amount must be positive").max(999999999, "Amount exceeds maximum allowed").optional(),
+  electricityBill: z.number().nonnegative("Bill amount must be positive").max(999999999, "Amount exceeds maximum allowed").optional(),
+  waterBill: z.number().nonnegative("Bill amount must be positive").max(999999999, "Amount exceeds maximum allowed").optional(),
+  rent: z.number().nonnegative("Rent must be positive").max(999999999, "Amount exceeds maximum allowed").optional(),
+}).refine((data) => {
+  const totalBudget = data.foodBudget + data.transportBudget + data.entertainmentBudget + data.shoppingBudget;
+  return totalBudget <= data.income;
+}, {
+  message: "Total budget cannot exceed monthly income",
+  path: ["foodBudget"]
+});
 
 const FirstTimeSetup = ({ onComplete }: FirstTimeSetupProps) => {
   const { toast } = useToast();
@@ -42,6 +64,26 @@ const FirstTimeSetup = ({ onComplete }: FirstTimeSetupProps) => {
         });
         return;
       }
+
+      // Validate step 1 data
+      try {
+        setupSchema.parse({
+          income: parseFloat(parseFormattedNumber(formData.income)),
+          foodBudget: parseFloat(parseFormattedNumber(formData.foodBudget)),
+          transportBudget: parseFloat(parseFormattedNumber(formData.transportBudget)),
+          entertainmentBudget: parseFloat(parseFormattedNumber(formData.entertainmentBudget)),
+          shoppingBudget: parseFloat(parseFormattedNumber(formData.shoppingBudget)),
+        });
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          toast({
+            title: "Validation Error",
+            description: error.issues[0].message,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
     }
     
     if (step === 2 && formData.hasBillsAndRent) {
@@ -53,6 +95,34 @@ const FirstTimeSetup = ({ onComplete }: FirstTimeSetupProps) => {
           variant: "destructive",
         });
         return;
+      }
+
+      // Validate step 2 data
+      try {
+        z.object({
+          billsDueDate: z.number().int().min(1).max(31),
+          rentDueDate: z.number().int().min(1).max(31),
+          internetBill: z.number().nonnegative().max(999999999),
+          electricityBill: z.number().nonnegative().max(999999999),
+          waterBill: z.number().nonnegative().max(999999999),
+          rent: z.number().nonnegative().max(999999999),
+        }).parse({
+          billsDueDate: parseInt(formData.billsDueDate),
+          rentDueDate: parseInt(formData.rentDueDate),
+          internetBill: parseFloat(parseFormattedNumber(formData.internetBill)),
+          electricityBill: parseFloat(parseFormattedNumber(formData.electricityBill)),
+          waterBill: parseFloat(parseFormattedNumber(formData.waterBill)),
+          rent: parseFloat(parseFormattedNumber(formData.rent)),
+        });
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          toast({
+            title: "Validation Error",
+            description: error.issues[0].message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
     }
 

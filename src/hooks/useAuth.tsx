@@ -67,23 +67,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: emailOrUsername,
         password
       });
+      // Use generic error message to prevent email enumeration
+      if (error) {
+        return { error: { message: 'Invalid credentials' } };
+      }
       return { error };
     } else {
       // Query profile by username to get email
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('email')
         .eq('username', emailOrUsername)
         .single();
 
-      if (profileError || !profile) {
-        return { error: { message: 'Invalid username or password' } };
+      if (!profile) {
+        // Generic error to prevent username enumeration
+        return { error: { message: 'Invalid credentials' } };
       }
 
       const { error } = await supabase.auth.signInWithPassword({
         email: profile.email,
         password
       });
+      
+      // Use generic error message
+      if (error) {
+        return { error: { message: 'Invalid credentials' } };
+      }
       return { error };
     }
   };
