@@ -12,24 +12,60 @@ serve(async (req) => {
   }
 
   try {
+    // Check for Authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("No Authorization header found");
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Authentication required. Please log in to use the AI Advisor." 
+        }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    console.log("Authorization header present");
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
+          headers: { Authorization: authHeader },
         },
       }
     );
 
     const {
       data: { user },
+      error: authError,
     } = await supabaseClient.auth.getUser();
 
-    if (!user) {
-      console.error("Authentication failed: No user found");
+    if (authError) {
+      console.error("Auth error:", authError.message);
       return new Response(
-        JSON.stringify({ error: "Not authenticated. Please log in and try again." }),
+        JSON.stringify({ 
+          success: false,
+          error: "Authentication failed: " + authError.message 
+        }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (!user) {
+      console.error("No user found from auth token");
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Not authenticated. Please log in and try again." 
+        }),
         {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -45,7 +81,10 @@ serve(async (req) => {
     } catch (error) {
       console.error("Invalid JSON in request body:", error);
       return new Response(
-        JSON.stringify({ error: "Invalid request format" }),
+        JSON.stringify({ 
+          success: false,
+          error: "Invalid request format" 
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -56,8 +95,12 @@ serve(async (req) => {
     const { action, data } = requestBody;
 
     if (!action) {
+      console.error("Missing action in request body");
       return new Response(
-        JSON.stringify({ error: "Missing required field: action" }),
+        JSON.stringify({ 
+          success: false,
+          error: "Missing required field: action" 
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -65,7 +108,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Processing action:", action);
+    console.log("Processing action:", action, "for user:", user.id);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
@@ -123,14 +166,13 @@ Your job is to:
 Always respond in a friendly, conversational tone as ${characterName}.`;
 
     if (action === "generate_plan") {
-      if (!data?.monthlyIncome || !data?.onboardingAnswers) {
-        console.error("Missing required fields for generate_plan:", { 
-          hasIncome: !!data?.monthlyIncome, 
-          hasAnswers: !!data?.onboardingAnswers 
-        });
+      // Validate required fields
+      if (!data?.monthlyIncome) {
+        console.error("Missing monthlyIncome");
         return new Response(
           JSON.stringify({ 
-            error: "Missing required fields. Please provide monthly income and onboarding answers." 
+            success: false,
+            error: "Monthly income is required" 
           }),
           {
             status: 400,
@@ -139,7 +181,21 @@ Always respond in a friendly, conversational tone as ${characterName}.`;
         );
       }
 
-      console.log("Generating plan for income:", data.monthlyIncome);
+      if (!data?.onboardingAnswers) {
+        console.error("Missing onboardingAnswers");
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: "Onboarding answers are required" 
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      console.log("Generating financial plan for user:", user.id, "income:", data.monthlyIncome);
       
       systemPrompt += `\n\nThe user has completed onboarding. Generate a comprehensive 1-month financial plan based on their income of ₱${data.monthlyIncome} and the following information:
 ${JSON.stringify(data.onboardingAnswers, null, 2)}
@@ -158,8 +214,12 @@ Return your response as a detailed financial plan with specific amounts and perc
 
     if (action === "chat") {
       if (!data?.message) {
+        console.error("Missing message in chat request");
         return new Response(
-          JSON.stringify({ error: "Missing required field: message" }),
+          JSON.stringify({ 
+            success: false,
+            error: "Missing required field: message" 
+          }),
           {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -219,7 +279,10 @@ Return your response as a detailed financial plan with specific amounts and perc
       
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+          JSON.stringify({ 
+            success: false,
+            error: "Rate limit exceeded. Please try again later." 
+          }),
           {
             status: 429,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -228,7 +291,10 @@ Return your response as a detailed financial plan with specific amounts and perc
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Payment required. Please add credits to continue." }),
+          JSON.stringify({ 
+            success: false,
+            error: "Payment required. Please add credits to continue." 
+          }),
           {
             status: 402,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -237,7 +303,10 @@ Return your response as a detailed financial plan with specific amounts and perc
       }
       
       return new Response(
-        JSON.stringify({ error: "AI service temporarily unavailable. Please try again." }),
+        JSON.stringify({ 
+          success: false,
+          error: "AI service temporarily unavailable. Please try again." 
+        }),
         {
           status: 503,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -250,7 +319,10 @@ Return your response as a detailed financial plan with specific amounts and perc
     if (!aiResponse.choices || !aiResponse.choices[0]?.message?.content) {
       console.error("Invalid AI response format:", aiResponse);
       return new Response(
-        JSON.stringify({ error: "Invalid response from AI service" }),
+        JSON.stringify({ 
+          success: false,
+          error: "Invalid response from AI service" 
+        }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -259,7 +331,7 @@ Return your response as a detailed financial plan with specific amounts and perc
     }
     
     const assistantMessage = aiResponse.choices[0].message.content;
-    console.log("AI response received, length:", assistantMessage.length);
+    console.log("AI response received successfully, length:", assistantMessage.length);
 
     if (action === "chat") {
       // Save assistant message
@@ -282,8 +354,10 @@ Return your response as a detailed financial plan with specific amounts and perc
     );
   } catch (error: any) {
     console.error("Unexpected error in ai-advisor function:", error);
+    console.error("Error stack:", error.stack);
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: "An unexpected error occurred. Please try again.",
         details: error.message 
       }), 

@@ -32,6 +32,8 @@ export default function AIAdvisor() {
       : 'onboarding'
     : 'character';
 
+  console.log('AI Advisor - Current step:', step, 'Settings:', settings);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
