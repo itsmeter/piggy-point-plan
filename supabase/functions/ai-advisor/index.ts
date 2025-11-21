@@ -110,6 +110,57 @@ serve(async (req) => {
 
     console.log("Processing action:", action, "for user:", user.id);
 
+    // Rate limiting: Check usage
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
+    if (action === "generate_plan") {
+      const { count: planCount } = await supabaseClient
+        .from("ai_advisor_usage")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("action", "generate_plan")
+        .gte("created_at", oneDayAgo);
+
+      if (planCount && planCount >= 5) {
+        console.log("Rate limit exceeded for plan generation:", user.id);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: "Daily plan generation limit reached (5 per day). Please try again tomorrow." 
+          }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
+    if (action === "chat") {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      
+      const { count: chatCount } = await supabaseClient
+        .from("ai_advisor_usage")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("action", "chat")
+        .gte("created_at", oneHourAgo);
+
+      if (chatCount && chatCount >= 50) {
+        console.log("Rate limit exceeded for chat:", user.id);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: "Hourly chat limit reached (50 per hour). Please try again later." 
+          }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -341,6 +392,13 @@ Return your response as a detailed financial plan with specific amounts and perc
         content: assistantMessage,
       });
     }
+
+    // Log usage for rate limiting
+    await supabaseClient.from("ai_advisor_usage").insert({
+      user_id: user.id,
+      action: action,
+      tokens_used: aiResponse.usage?.total_tokens || 0,
+    });
 
     return new Response(
       JSON.stringify({ 
