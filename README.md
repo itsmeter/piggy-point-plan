@@ -1,73 +1,43 @@
-# Welcome to your Lovable project
+# Smart Budgeting & PiggyPoints 🐷💰
 
-## Project info
+**Project URL**: [https://lovable.dev/projects/89e12717-5ecc-44ff-8492-cf27b27e8dd4](https://lovable.dev/projects/89e12717-5ecc-44ff-8492-cf27b27e8dd4)
 
-**URL**: https://lovable.dev/projects/89e12717-5ecc-44ff-8492-cf27b27e8dd4
+## 📖 Replace Excel with Smart Budgeting
 
-## How can I edit this code?
+Welcome to the **Smart Budgeting** system. This project is designed to make personal finance simple, clear, and surprisingly fun. 
 
-There are several ways of editing your application.
+We believe managing money shouldn't feel like a chore. By tracking expenses and setting budgets, you earn **PiggyPoints**—a reward system that gamifies your financial health.
 
-**Use Lovable**
+### 🌟 Key Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/89e12717-5ecc-44ff-8492-cf27b27e8dd4) and start prompting.
+Based on our core philosophy:
 
-Changes made via Lovable will be committed automatically to this repo.
+* **📈 Track Everything**
+    Monitor income, expenses, bills, and projects in one place. Say goodbye to messy spreadsheets.
+    
+* **🎯 Set Budgets**
+    Create monthly and project-based budgets. Receive smart alerts when you are nearing your limits to stay on track.
 
-**Use your preferred IDE**
+* **🏅 Earn PiggyPoints (Achievements)**
+    Complete financial goals, save consistently, and get rewarded with points. The better you manage your money, the more you earn!
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+* **✨ Customize Your Way (The Shop)**
+    Use your hard-earned **PiggyPoints** in the integrated Shop. Unlock exclusive themes, custom icons, and fresh backgrounds to personalize your dashboard.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+* **🤖 AI Adviser**
+    Your personal financial assistant. It analyzes your spending habits to provide smart tips and strategies to help you maximize your PiggyPoints and savings.
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🛠️ Built With
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+This project utilizes a modern tech stack to ensure a fast and responsive experience:
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **Vite**
+- **TypeScript**
+- **React**
+- **shadcn-ui**
+- **Tailwind CSS**
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+---
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/89e12717-5ecc-44ff-8492-cf27b27e8dd4) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
