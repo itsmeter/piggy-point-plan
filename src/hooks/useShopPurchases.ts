@@ -155,6 +155,20 @@ export function useShopPurchases() {
     const root = document.documentElement;
     const config = item.config as Record<string, any>;
 
+    // ALWAYS reset dark mode styles first before applying any theme
+    root.style.removeProperty('--background');
+    root.style.removeProperty('--foreground');
+    root.style.removeProperty('--card');
+    root.style.removeProperty('--card-foreground');
+    root.style.removeProperty('--popover');
+    root.style.removeProperty('--popover-foreground');
+    root.style.removeProperty('--secondary');
+    root.style.removeProperty('--secondary-foreground');
+    root.style.removeProperty('--muted');
+    root.style.removeProperty('--muted-foreground');
+    root.style.removeProperty('--border');
+    root.style.removeProperty('--input');
+
     // Apply theme colors
     if (config.primary) {
       root.style.setProperty('--primary', config.primary);
@@ -165,11 +179,21 @@ export function useShopPurchases() {
     if (config.gradient) {
       root.style.setProperty('--gradient-primary', config.gradient);
     }
+    
     // Apply dark theme specific settings
     if (config.isDark) {
-      if (config.background) root.style.setProperty('--background', config.background);
-      if (config.foreground) root.style.setProperty('--foreground', config.foreground);
-      if (config.card) root.style.setProperty('--card', config.card);
+      root.style.setProperty('--background', config.background || '220 15% 10%');
+      root.style.setProperty('--foreground', config.foreground || '220 10% 90%');
+      root.style.setProperty('--card', config.card || '220 15% 15%');
+      root.style.setProperty('--card-foreground', '220 10% 90%');
+      root.style.setProperty('--popover', config.card || '220 15% 15%');
+      root.style.setProperty('--popover-foreground', '220 10% 90%');
+      root.style.setProperty('--secondary', '220 15% 20%');
+      root.style.setProperty('--secondary-foreground', '220 10% 90%');
+      root.style.setProperty('--muted', '220 15% 20%');
+      root.style.setProperty('--muted-foreground', '220 10% 60%');
+      root.style.setProperty('--border', '220 15% 25%');
+      root.style.setProperty('--input', '220 15% 25%');
     }
 
     // Store in localStorage as fallback
