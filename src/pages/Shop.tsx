@@ -2,7 +2,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Palette, Sparkles, Frame, Check, Loader2 } from "lucide-react";
+import { Palette, Sparkles, Frame, Check, Loader2, Image } from "lucide-react";
 import { usePiggyPoints } from "@/hooks/usePiggyPoints";
 import { useShopPurchases } from "@/hooks/useShopPurchases";
 import coinIcon from "@/assets/coin.png";
@@ -10,15 +10,16 @@ import coinIcon from "@/assets/coin.png";
 const getItemIcon = (type: string) => {
   switch (type) {
     case 'theme': return Palette;
-    case 'icons': return Sparkles;
-    case 'frame': return Frame;
+    case 'icon': return Sparkles;
+    case 'avatar_frame': return Frame;
+    case 'background': return Image;
     default: return Sparkles;
   }
 };
 
 const Shop = () => {
   const { piggyPoints } = usePiggyPoints();
-  const { shopItems, loading, purchaseItem, isPurchased } = useShopPurchases();
+  const { shopItems, loading, purchaseItem, isPurchased, equipItem } = useShopPurchases();
 
   if (loading) {
     return (
@@ -72,7 +73,7 @@ const Shop = () => {
                       <div>
                         <CardTitle className="text-lg">{item.name}</CardTitle>
                         <Badge variant="secondary" className="mt-1">
-                          {item.type}
+                          {item.type.replace('_', ' ')}
                         </Badge>
                       </div>
                     </div>
@@ -104,9 +105,13 @@ const Shop = () => {
                     </div>
 
                     {owned ? (
-                      <Button disabled className="w-full">
-                        <Check className="h-4 w-4 mr-2" />
-                        Owned
+                      <Button
+                        onClick={() => equipItem(item)}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Equip / Use
                       </Button>
                     ) : (
                       <Button

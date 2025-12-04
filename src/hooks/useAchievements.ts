@@ -56,6 +56,53 @@ export function useAchievements() {
     }
   };
 
+  const getProgressForType = async (type: string): Promise<number> => {
+    if (!user) return 0;
+
+    try {
+      switch (type) {
+        case 'transactions': {
+          const { count } = await supabase
+            .from('transactions')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+          return count || 0;
+        }
+        case 'login_streak': {
+          const { data } = await supabase
+            .from('piggy_points')
+            .select('login_streak')
+            .eq('user_id', user.id)
+            .single();
+          return data?.login_streak || 0;
+        }
+        case 'projects_completed': {
+          const { count } = await supabase
+            .from('projects')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('status', 'completed');
+          return count || 0;
+        }
+        case 'setup_complete': {
+          const { data } = await supabase
+            .from('user_settings')
+            .select('first_setup_completed')
+            .eq('user_id', user.id)
+            .single();
+          return data?.first_setup_completed ? 1 : 0;
+        }
+        case 'budget_streak':
+          return 0; // Would need more complex tracking
+        default:
+          return 0;
+      }
+    } catch (error) {
+      console.error('Error getting progress:', error);
+      return 0;
+    }
+  };
+
   const claimAchievement = async (achievementId: string) => {
     if (!user) return;
 
@@ -68,6 +115,19 @@ export function useAchievements() {
       toast({
         title: 'Already Claimed',
         description: 'You have already claimed this achievement',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    // Verify requirements are met
+    const progress = await getProgressForType(achievement.requirement_type);
+    const requirement = achievement.requirement_value || 0;
+    
+    if (progress < requirement) {
+      toast({
+        title: 'Requirements Not Met',
+        description: `You need ${requirement} ${achievement.requirement_type.replace('_', ' ')} but only have ${progress}`,
         variant: 'destructive'
       });
       return false;
