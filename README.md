@@ -41,3 +41,16 @@ This project utilizes a modern tech stack to ensure a fast and responsive experi
 
 ---
 
+## 👥 Contributors & Creators
+
+A huge thank you to the team who brought PiggyPoints to life:
+
+| Name | Role |
+| :--- | :--- | 
+| **Dugan, Terence Martin** | Lead Developer |
+| **Ruiz, Arn Angel** | Project Team Member | 
+| **de Guzman, Irina Shaunelle** | Project Team Member |
+| **Emata, Chelsea Lorraine** | Project Team Member | 
+| **Fegalquin, Kym** | Project Team Member | 
+| **Pelobello, Savina Lar Jeaner** | Project Team Member | 
+| **Miranda, Elaiza Mae** | Project Team Member | 
