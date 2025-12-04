@@ -239,8 +239,11 @@ export function useShopPurchases() {
       return false;
     }
 
-    // Check if owned
-    if (!purchases.some(p => p.shop_item_id === item.id)) {
+    // Check if owned (skip for default theme which is free)
+    const config = item.config as Record<string, any> | null;
+    const isDefault = config?.isDefault === true;
+    
+    if (!isDefault && !purchases.some(p => p.shop_item_id === item.id)) {
       toast({
         title: 'Not Owned',
         description: 'You need to purchase this item first',
@@ -250,32 +253,45 @@ export function useShopPurchases() {
     }
 
     try {
-      if (item.type === 'theme') {
-        // Update active theme in user_settings
-        const { error: settingsError } = await supabase
-          .from('user_settings')
-          .update({ 
-            active_theme_id: item.id,
-            theme: 'custom' 
-          })
-          .eq('user_id', user.id);
+      let updateData: Record<string, any> = {};
+      let successMessage = '';
 
-        if (settingsError) throw settingsError;
-
-        // Apply theme immediately
-        applyTheme(item);
-
-        toast({
-          title: '🎨 Theme Equipped!',
-          description: `${item.name} is now active`,
-        });
-      } else {
-        // For other item types (icons, frames, backgrounds), just show success
-        toast({
-          title: '✨ Item Equipped!',
-          description: `${item.name} is now active`,
-        });
+      switch (item.type) {
+        case 'theme':
+          updateData = { 
+            active_theme_id: isDefault ? null : item.id,
+            theme: isDefault ? 'light' : 'custom' 
+          };
+          applyTheme(item);
+          successMessage = '🎨 Theme Equipped!';
+          break;
+        case 'avatar_frame':
+          updateData = { active_frame_id: item.id };
+          successMessage = '🖼️ Frame Equipped!';
+          break;
+        case 'icon':
+          updateData = { active_icon_id: item.id };
+          successMessage = '✨ Icon Equipped!';
+          break;
+        case 'background':
+          updateData = { active_background_id: item.id };
+          successMessage = '🌄 Background Equipped!';
+          break;
+        default:
+          successMessage = '✨ Item Equipped!';
       }
+
+      const { error: settingsError } = await supabase
+        .from('user_settings')
+        .update(updateData)
+        .eq('user_id', user.id);
+
+      if (settingsError) throw settingsError;
+
+      toast({
+        title: successMessage,
+        description: `${item.name} is now active`,
+      });
 
       return true;
     } catch (error: any) {

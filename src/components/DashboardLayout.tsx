@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { usePiggyPoints } from "@/hooks/usePiggyPoints";
 import { useTransactions } from "@/hooks/useTransactions";
+import ProfileCard from "@/components/ProfileCard";
 import {
   LayoutDashboard,
   Receipt,
@@ -153,30 +154,35 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <span className="font-bold text-xl">PiggyPoints</span>
           </div>
 
+          {/* Profile Card */}
+          <div className="mx-4 mb-4">
+            <ProfileCard compact />
+          </div>
+
           {/* PiggyPoints and Balance Display */}
-          <div className="mx-6 mb-6 space-y-3">
-            <div className="p-4 bg-muted rounded-xl">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Balance</span>
+          <div className="mx-4 mb-6 space-y-3">
+            <div className="p-3 bg-muted rounded-xl">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-muted-foreground">Balance</span>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6"
+                  className="h-5 w-5"
                   onClick={() => setBalanceHidden(!balanceHidden)}
                 >
                   {balanceHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                 </Button>
               </div>
-              <div className="text-2xl font-bold">
+              <div className="text-xl font-bold">
                 {balanceHidden ? '••••••' : `₱${balance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}
               </div>
             </div>
-            <div className="p-4 bg-gradient-to-br from-piggy-gold/10 to-piggy-gold/5 border border-piggy-gold/20 rounded-xl">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">PiggyPoints</span>
-                <img src={coinIcon} alt="PiggyPoints" className="h-6 w-6" />
+            <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-muted-foreground">PiggyPoints</span>
+                <img src={coinIcon} alt="PiggyPoints" className="h-5 w-5" />
               </div>
-              <div className="text-2xl font-bold">{piggyPoints?.total_points || 0}</div>
+              <div className="text-xl font-bold">{piggyPoints?.total_points || 0}</div>
             </div>
           </div>
 
