@@ -539,6 +539,9 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          active_background_id: string | null
+          active_frame_id: string | null
+          active_icon_id: string | null
           active_theme_id: string | null
           bill_due_date: number | null
           created_at: string
@@ -561,6 +564,9 @@ export type Database = {
           water_bill: number | null
         }
         Insert: {
+          active_background_id?: string | null
+          active_frame_id?: string | null
+          active_icon_id?: string | null
           active_theme_id?: string | null
           bill_due_date?: number | null
           created_at?: string
@@ -583,6 +589,9 @@ export type Database = {
           water_bill?: number | null
         }
         Update: {
+          active_background_id?: string | null
+          active_frame_id?: string | null
+          active_icon_id?: string | null
           active_theme_id?: string | null
           bill_due_date?: number | null
           created_at?: string
@@ -605,6 +614,27 @@ export type Database = {
           water_bill?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "user_settings_active_background_id_fkey"
+            columns: ["active_background_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_settings_active_frame_id_fkey"
+            columns: ["active_frame_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_settings_active_icon_id_fkey"
+            columns: ["active_icon_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_settings_active_theme_id_fkey"
             columns: ["active_theme_id"]

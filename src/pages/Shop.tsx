@@ -81,19 +81,30 @@ const Shop = () => {
   const { user } = useAuth();
   const { piggyPoints } = usePiggyPoints();
   const { shopItems, loading, purchaseItem, isPurchased, equipItem } = useShopPurchases();
-  const [activeThemeId, setActiveThemeId] = useState<string | null>(null);
+  const [activeItems, setActiveItems] = useState<{
+    theme: string | null;
+    frame: string | null;
+    icon: string | null;
+    background: string | null;
+  }>({ theme: null, frame: null, icon: null, background: null });
 
   useEffect(() => {
-    const fetchActiveTheme = async () => {
+    const fetchActiveItems = async () => {
       if (!user) return;
       const { data } = await supabase
         .from('user_settings')
-        .select('active_theme_id')
+        .select('active_theme_id, active_frame_id, active_icon_id, active_background_id')
         .eq('user_id', user.id)
-        .single();
-      setActiveThemeId(data?.active_theme_id || null);
+        .maybeSingle();
+      
+      setActiveItems({
+        theme: data?.active_theme_id || null,
+        frame: data?.active_frame_id || null,
+        icon: data?.active_icon_id || null,
+        background: data?.active_background_id || null
+      });
     };
-    fetchActiveTheme();
+    fetchActiveItems();
   }, [user]);
 
   if (loading) {
@@ -111,10 +122,34 @@ const Shop = () => {
   const frames = shopItems.filter(i => i.type === 'avatar_frame');
   const icons = shopItems.filter(i => i.type === 'icon');
 
+  const getActiveId = (type: string) => {
+    switch (type) {
+      case 'theme': return activeItems.theme;
+      case 'avatar_frame': return activeItems.frame;
+      case 'icon': return activeItems.icon;
+      case 'background': return activeItems.background;
+      default: return null;
+    }
+  };
+
   const handleEquip = async (item: any) => {
     const success = await equipItem(item);
-    if (success && item.type === 'theme') {
-      setActiveThemeId(item.id);
+    if (success) {
+      switch (item.type) {
+        case 'theme':
+          const config = item.config as Record<string, any> | null;
+          setActiveItems(prev => ({ ...prev, theme: config?.isDefault ? null : item.id }));
+          break;
+        case 'avatar_frame':
+          setActiveItems(prev => ({ ...prev, frame: item.id }));
+          break;
+        case 'icon':
+          setActiveItems(prev => ({ ...prev, icon: item.id }));
+          break;
+        case 'background':
+          setActiveItems(prev => ({ ...prev, background: item.id }));
+          break;
+      }
     }
   };
 
@@ -126,7 +161,8 @@ const Shop = () => {
         const isDefault = config?.isDefault === true;
         const owned = isDefault || isPurchased(item.id);
         const canAfford = (piggyPoints?.total_points || 0) >= item.price;
-        const isEquipped = activeThemeId === item.id || (isDefault && !activeThemeId);
+        const activeId = getActiveId(item.type);
+        const isEquipped = activeId === item.id || (isDefault && item.type === 'theme' && !activeItems.theme);
 
         return (
           <Card key={item.id} className={`transition-all ${owned ? 'border-success/50' : ''} ${isEquipped ? 'ring-2 ring-primary' : ''}`}>
