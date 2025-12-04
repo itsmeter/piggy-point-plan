@@ -99,6 +99,32 @@ export function useEquippedItems() {
     fetchEquippedItems();
   }, [user]);
 
+  // Real-time subscription for user_settings changes
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('equipped-items-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_settings',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Refresh equipped items when settings change
+          fetchEquippedItems();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   return {
     equippedItems,
     profile,
