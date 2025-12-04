@@ -1,6 +1,6 @@
 # Smart Budgeting & PiggyPoints 🐷💰
 
-**Project URL**: [https://lovable.dev/projects/89e12717-5ecc-44ff-8492-cf27b27e8dd4](https://lovable.dev/projects/89e12717-5ecc-44ff-8492-cf27b27e8dd4](https://piggy-point-plan.lovable.app)
+**Project URL**: [https://piggy-point-plan.lovable.app]
 
 ## 📖 Replace Excel with Smart Budgeting
 
