@@ -153,7 +153,7 @@ export function useShopPurchases() {
     if (!item.config) return;
 
     const root = document.documentElement;
-    const config = item.config;
+    const config = item.config as Record<string, any>;
 
     // Apply theme colors
     if (config.primary) {
@@ -165,9 +165,44 @@ export function useShopPurchases() {
     if (config.gradient) {
       root.style.setProperty('--gradient-primary', config.gradient);
     }
+    // Apply dark theme specific settings
+    if (config.isDark) {
+      if (config.background) root.style.setProperty('--background', config.background);
+      if (config.foreground) root.style.setProperty('--foreground', config.foreground);
+      if (config.card) root.style.setProperty('--card', config.card);
+    }
 
     // Store in localStorage as fallback
     localStorage.setItem('activeTheme', item.id);
+  };
+
+  const resetToDefaultTheme = () => {
+    const root = document.documentElement;
+    root.style.setProperty('--primary', '43 100% 51%');
+    root.style.setProperty('--primary-glow', '43 100% 61%');
+    root.style.setProperty('--gradient-primary', 'linear-gradient(135deg, hsl(43 100% 51%) 0%, hsl(43 100% 61%) 100%)');
+    root.style.removeProperty('--background');
+    root.style.removeProperty('--foreground');
+    root.style.removeProperty('--card');
+    localStorage.removeItem('activeTheme');
+  };
+
+  const getActiveItems = async () => {
+    if (!user) return null;
+    
+    try {
+      const { data: settings } = await supabase
+        .from('user_settings')
+        .select('active_theme_id')
+        .eq('user_id', user.id)
+        .single();
+      
+      return {
+        activeThemeId: settings?.active_theme_id || null
+      };
+    } catch {
+      return null;
+    }
   };
 
   const equipItem = async (item: ShopItem): Promise<boolean> => {
@@ -240,7 +275,11 @@ export function useShopPurchases() {
         .eq('user_id', user.id)
         .single();
 
-      if (error || !settings?.active_theme_id) return;
+      if (error || !settings?.active_theme_id) {
+        // No active theme set, use default
+        resetToDefaultTheme();
+        return;
+      }
 
       // Fetch the theme item
       const { data: themeItem, error: themeError } = await supabase
@@ -249,11 +288,15 @@ export function useShopPurchases() {
         .eq('id', settings.active_theme_id)
         .single();
 
-      if (themeError || !themeItem) return;
+      if (themeError || !themeItem) {
+        resetToDefaultTheme();
+        return;
+      }
 
       applyTheme(themeItem);
     } catch (error: any) {
       console.error('Error loading active theme:', error);
+      resetToDefaultTheme();
     }
   };
 
