@@ -170,6 +170,66 @@ export function useShopPurchases() {
     localStorage.setItem('activeTheme', item.id);
   };
 
+  const equipItem = async (item: ShopItem): Promise<boolean> => {
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to equip items',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    // Check if owned
+    if (!purchases.some(p => p.shop_item_id === item.id)) {
+      toast({
+        title: 'Not Owned',
+        description: 'You need to purchase this item first',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    try {
+      if (item.type === 'theme') {
+        // Update active theme in user_settings
+        const { error: settingsError } = await supabase
+          .from('user_settings')
+          .update({ 
+            active_theme_id: item.id,
+            theme: 'custom' 
+          })
+          .eq('user_id', user.id);
+
+        if (settingsError) throw settingsError;
+
+        // Apply theme immediately
+        applyTheme(item);
+
+        toast({
+          title: '🎨 Theme Equipped!',
+          description: `${item.name} is now active`,
+        });
+      } else {
+        // For other item types (icons, frames, backgrounds), just show success
+        toast({
+          title: '✨ Item Equipped!',
+          description: `${item.name} is now active`,
+        });
+      }
+
+      return true;
+    } catch (error: any) {
+      console.error('Error equipping item:', error);
+      toast({
+        title: 'Equip Failed',
+        description: error.message || 'An error occurred',
+        variant: 'destructive'
+      });
+      return false;
+    }
+  };
+
   const loadActiveTheme = async () => {
     if (!user) return;
 
@@ -215,6 +275,7 @@ export function useShopPurchases() {
     loading,
     purchaseItem,
     isPurchased,
+    equipItem,
     refreshPurchases: fetchPurchases,
     loadActiveTheme
   };

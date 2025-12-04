@@ -208,6 +208,7 @@ export type Database = {
           created_at: string
           current_level: number
           id: string
+          last_daily_reward_claimed: string | null
           last_login_date: string | null
           login_streak: number
           points_to_next_level: number
@@ -219,6 +220,7 @@ export type Database = {
           created_at?: string
           current_level?: number
           id?: string
+          last_daily_reward_claimed?: string | null
           last_login_date?: string | null
           login_streak?: number
           points_to_next_level?: number
@@ -230,6 +232,7 @@ export type Database = {
           created_at?: string
           current_level?: number
           id?: string
+          last_daily_reward_claimed?: string | null
           last_login_date?: string | null
           login_streak?: number
           points_to_next_level?: number
