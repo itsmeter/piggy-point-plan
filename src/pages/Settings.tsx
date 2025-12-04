@@ -38,12 +38,12 @@ const Settings = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username')
+        .select('display_name')
         .eq('id', user.id)
         .single();
 
       if (error) throw error;
-      setDisplayName(data.username || '');
+      setDisplayName(data.display_name || '');
     } catch (error: any) {
       console.error('Error fetching profile:', error);
     }
@@ -72,20 +72,20 @@ const Settings = () => {
   };
 
   const handleUpdateProfile = async () => {
-    if (!user || !displayName.trim()) return;
+    if (!user) return;
 
     setLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ username: displayName.trim() })
+        .update({ display_name: displayName.trim() || null })
         .eq('id', user.id);
 
       if (error) throw error;
 
       toast({
         title: 'Success',
-        description: 'Profile updated successfully'
+        description: 'Display name updated successfully'
       });
     } catch (error: any) {
       toast({
